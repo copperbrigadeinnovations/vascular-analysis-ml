@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vascular Analysis</title>
+  <style>
+    :root {
+      --bg: #0b0f14;
+      --panel: #121823;
+      --border: #22304a;
+      --text: #e8edf4;
+      --muted: #8ba0bd;
+      --accent: #3ea6ff;
+      --accent-dim: #1d5a86;
+      --warn: #ffb020;
+      --danger: #ff5a5a;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      padding: 32px 16px 64px;
+    }
+    .wrap { max-width: 900px; margin: 0 auto; }
+    h1 { font-size: 1.5rem; margin-bottom: 4px; }
+    .subtitle { color: var(--muted); font-size: 0.9rem; margin-bottom: 28px; }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 6px; }
+    .dropzone {
+      border: 2px dashed var(--border);
+      border-radius: 8px;
+      padding: 28px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      margin-bottom: 16px;
+    }
+    .dropzone.drag { border-color: var(--accent); background: rgba(62, 166, 255, 0.06); }
+    .dropzone .fname { color: var(--accent); font-weight: 600; margin-top: 8px; display: none; }
+    input[type="file"] { display: none; }
+    .row { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 16px; }
+    .field { flex: 1; min-width: 180px; }
+    input[type="number"] {
+      width: 100%;
+      background: #0e1420;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 9px 10px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+    button {
+      background: var(--accent);
+      color: #05121f;
+      border: none;
+      padding: 11px 22px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    button:hover { background: #5cb6ff; }
+    button:disabled { background: var(--accent-dim); cursor: not-allowed; }
+    .hint { color: var(--muted); font-size: 0.78rem; margin-top: -8px; margin-bottom: 16px; }
+    .error {
+      background: rgba(255, 90, 90, 0.1);
+      border: 1px solid var(--danger);
+      color: #ffb3b3;
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 0.9rem;
+    }
+    .result-header { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+    .result-header h2 { font-size: 1.1rem; margin: 0; }
+    .badge {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 3px 9px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+    .stats { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 18px; }
+    .stat { background: #0e1420; border: 1px solid var(--border); border-radius: 8px; padding: 10px 16px; min-width: 110px; }
+    .stat .num { font-size: 1.3rem; font-weight: 700; color: var(--accent); }
+    .stat .lbl { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
+    .observation {
+      background: #0e1420;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 18px;
+      line-height: 1.6;
+      font-size: 0.95rem;
+      white-space: pre-wrap;
+    }
+    .recommendation {
+      background: rgba(255, 176, 32, 0.08);
+      border: 1px solid var(--warn);
+      border-radius: 8px;
+      padding: 18px;
+      line-height: 1.6;
+      font-size: 0.92rem;
+      white-space: pre-wrap;
+      margin-top: 16px;
+      color: #ffd98a;
+    }
+    .recommendation .rec-title {
+      display: block;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--warn);
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+    .overlay-img { width: 100%; border-radius: 8px; margin-top: 18px; border: 1px solid var(--border); }
+    .disclaimer { color: var(--muted); font-size: 0.75rem; margin-top: 22px; line-height: 1.5; }
+    .spinner {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 0.88rem;
+      margin-top: 14px;
+    }
+    .spinner.active { display: flex; }
+    .spinner .dot {
+      width: 14px; height: 14px;
+      border: 2px solid var(--accent-dim);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Vascular Analysis</h1>
+    <div class="subtitle">Upload an angiogram / X-ray image to run automated vessel segmentation and quantification. Research use only &mdash; not a clinical diagnostic tool.</div>
+
+    {% if error %}
+      <div class="error">{{ error }}</div>
+    {% endif %}
+
+    <div class="card">
+      <form id="analyze-form" action="/analyze" method="post" enctype="multipart/form-data">
+        <label for="file-input">Image file</label>
+        <div class="dropzone" id="dropzone">
+          <div>Drag &amp; drop an image here, or click to browse</div>
+          <div class="fname" id="fname"></div>
+          <input type="file" id="file-input" name="image" accept=".png,.jpg,.jpeg,.tif,.tiff,.bmp,.dcm,.dicom" required />
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label for="spacing">Pixel spacing override (mm/px, optional)</label>
+            <input type="number" step="0.001" min="0" id="spacing" name="spacing_mm" placeholder="leave blank to auto-detect" />
+          </div>
+        </div>
+        <div class="hint">Supported formats: PNG, JPG/JPEG, TIFF, BMP, DICOM (.dcm). If the file carries DICOM pixel spacing, measurements are reported in mm; otherwise in pixels unless overridden above.</div>
+
+        <button type="submit" id="submit-btn">Run analysis</button>
+        <div class="spinner" id="spinner"><div class="dot"></div> Processing image&hellip;</div>
+      </form>
+    </div>
+
+    {% if observation %}
+      <div class="card">
+        <div class="result-header">
+          <h2>Result &mdash; {{ filename }}</h2>
+          <span class="badge">quality: {{ quality }}</span>
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="num">{{ n_branches }}</div><div class="lbl">branches</div></div>
+          <div class="stat"><div class="num">{{ "%.1f"|format(total_length) if total_length is not none else "-" }}</div><div class="lbl">total length</div></div>
+          <div class="stat"><div class="num">{{ n_stenoses }}</div><div class="lbl">candidate narrowings</div></div>
+        </div>
+        <div class="observation">{{ observation }}</div>
+        {% if recommendation %}
+          <div class="recommendation"><span class="rec-title">Recommendations</span>{{ recommendation }}</div>
+        {% endif %}
+        {% if overlay_url %}
+          <img class="overlay-img" src="{{ overlay_url }}" alt="segmentation overlay" />
+        {% endif %}
+      </div>
+    {% endif %}
+
+    <div class="disclaimer">
+      These are automated, deterministic measurements from an image-processing pipeline. They do not constitute a clinical diagnosis and must be correlated with expert interpretation.
+    </div>
+  </div>
+
+  <script>
+    const dropzone = document.getElementById("dropzone");
+    const fileInput = document.getElementById("file-input");
+    const fname = document.getElementById("fname");
+    const form = document.getElementById("analyze-form");
+    const submitBtn = document.getElementById("submit-btn");
+    const spinner = document.getElementById("spinner");
+
+    dropzone.addEventListener("click", () => fileInput.click());
+
+    fileInput.addEventListener("change", () => {
+      if (fileInput.files.length) {
+        fname.textContent = fileInput.files[0].name;
+        fname.style.display = "block";
+      }
+    });
+
+    ["dragenter", "dragover"].forEach((evt) =>
+      dropzone.addEventListener(evt, (e) => {
+        e.preventDefault();
+        dropzone.classList.add("drag");
+      })
+    );
+    ["dragleave", "drop"].forEach((evt) =>
+      dropzone.addEventListener(evt, (e) => {
+        e.preventDefault();
+        dropzone.classList.remove("drag");
+      })
+    );
+    dropzone.addEventListener("drop", (e) => {
+      const files = e.dataTransfer.files;
+      if (files.length) {
+        fileInput.files = files;
+        fname.textContent = files[0].name;
+        fname.style.display = "block";
+      }
+    });
+
+    form.addEventListener("submit", () => {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Processing…";
+      spinner.classList.add("active");
+    });
+  </script>
+</body>
+</html>

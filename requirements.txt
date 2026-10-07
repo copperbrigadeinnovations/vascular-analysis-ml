@@ -1,0 +1,6 @@
+numpy>=1.26
+scipy>=1.11
+scikit-image>=0.22
+matplotlib>=3.8
+pydicom>=2.4
+flask>=3.0
